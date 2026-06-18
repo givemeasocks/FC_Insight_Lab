@@ -1057,7 +1057,7 @@ st.divider()
 
 nickname_input = st.text_input(
     "구단주명을 입력하세요",
-    placeholder="예: 장선익"
+    placeholder="예: 태연"
 )
 
 analyze_button = st.button("분석 시작")
@@ -1110,6 +1110,7 @@ if analyze_button:
 
 else:
     st.info("구단주명을 입력하고 **분석 시작** 버튼을 눌러 주세요.")
+    
     
 
 
