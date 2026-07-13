@@ -27,10 +27,11 @@ def get_ouid(nickname):
     )
 
     if response.status_code != 200:
-        return None, response.text
+        return None
 
     data = response.json()
-    return data.get("ouid"), None
+    return data.get("ouid")
+
 
 
 def get_matchtypes():
@@ -1111,6 +1112,7 @@ if analyze_button:
 else:
     st.info("구단주명을 입력하고 **분석 시작** 버튼을 눌러 주세요.")
     
+
 
     
     
