@@ -1063,53 +1063,55 @@ nickname_input = st.text_input(
 analyze_button = st.button("분석 시작")
 
 if analyze_button:
-    if API_KEY == "가림":
-        st.error("app.py 코드 안에 NEXON Open API Key를 먼저 입력해야 합니다.")
-        st.stop()
+    nickname = nickname_input.strip()
 
-    if not nickname_input.strip():
-        st.error("구단주명을 입력해 주세요.")
-        st.stop()
+    if not nickname:
+        st.warning("구단주명을 입력해주세요.")
 
-    with st.spinner("FC온라인 데이터를 조회하고 분석하는 중입니다..."):
-        ouid, error = get_ouid(nickname_input.strip())
+    else:
+        df = None
+        player_summary = None
 
-        if error:
-            st.error("구단주명 조회에 실패했습니다. 구단주명을 다시 확인해 주세요.")
-            st.write(error)
-            st.stop()
+        try:
+            with st.spinner("매치 데이터를 분석하고 있습니다."):
+                ouid = get_ouid(nickname)
 
-        if not ouid:
-            st.error("해당 구단주명의 ouid를 찾지 못했습니다.")
-            st.stop()
+                if not ouid:
+                    st.warning("해당 구단주명을 찾을 수 없습니다. 구단주명을 다시 확인해주세요.")
 
-        matchtype_name, match_ids = find_best_matchtype(ouid)
+                else:
+                    matchtype_name, match_ids = find_best_matchtype(ouid)
 
-        if not match_ids:
-            st.warning("조회 가능한 최근 경기 기록을 찾지 못했습니다. 최근에 플레이한 다른 구단주명으로 테스트해 주세요.")
-            st.stop()
+                    if not match_ids:
+                        st.warning("최근 분석 가능한 공식경기 데이터를 찾지 못했습니다.")
 
-        df = build_match_dataframe(
-            ouid=ouid,
-            nickname=nickname_input.strip(),
-            matchtype_name=matchtype_name,
-            match_ids=match_ids
-        )
+                    else:
+                        match_ids = match_ids[:5]
 
-        if df.empty:
-            st.error("경기 상세 데이터를 분석용 표로 변환하지 못했습니다.")
-            st.stop()
+                        df = build_match_dataframe(
+                            ouid,
+                            nickname,
+                            matchtype_name,
+                            match_ids
+                        )
 
-        data_folder = Path(__file__).resolve().parent.parent / "data"
-        data_folder.mkdir(parents=True, exist_ok=True)
-        df.to_csv(data_folder / "match_summary.csv", index=False, encoding="utf-8-sig")
+                        if df is None or df.empty:
+                            st.warning("분석 가능한 경기 데이터가 부족합니다. 다른 구단주명으로 다시 시도해주세요.")
+                            df = None
 
-        player_summary = build_player_summary(ouid, match_ids)
-    st.success("분석이 완료되었습니다.")
-    render_dashboard(df, player_summary)
+                        player_summary = None
 
+            if df is not None:
+                st.success("분석이 완료되었습니다.")
+                render_dashboard(df, player_summary)
+
+        except Exception:
+            st.error("일시적으로 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.")
+            st.caption("외부 API 호출 제한, 일시적인 응답 오류, 또는 해당 구단주의 최근 경기 데이터 부족으로 인해 분석이 중단되었을 수 있습니다.")
 else:
     st.info("구단주명을 입력하고 **분석 시작** 버튼을 눌러 주세요.")
+    
+
     
     
 
